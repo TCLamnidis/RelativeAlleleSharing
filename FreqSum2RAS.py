@@ -6,10 +6,10 @@ from time import strftime
 
 parser = argparse.ArgumentParser(description="Extract the frequency of shared rare variants between each test sample/group and all reference samples/groups from a freqsum file.")
 parser.add_argument("-I", "--Input", metavar="<INPUT FILE>", type=argparse.FileType('r'), help="The input freqsum file.", required=False)
-# parser.add_argument("-M", "--MAF", metavar="<MAX ALLELE COUNT>", type=int, help="The maximum number of alleles (total) in the reference populations. The minimum allele count is always 2.", required=True)
+parser.add_argument("-M", "--MAF", metavar="<MAX ALLELE COUNT>", type=int, default=10, help="The maximum number of alleles (total) in the reference populations. The minimum allele count is always 2.", required=False)
 # parser.add_argument("-mN", "--NormMin", metavar="<NUMBER>", type=int, help="The minimum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 1%% in the reference populations.", required=True)
 # parser.add_argument("-MN", "--NormMax", metavar="<NUMBER>", type=int, help="The maximum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 10%% in the reference populations.", required=True)
-# parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.", required=True)
+parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.", required=True)
 parser.add_argument("-NT", action='store_true', help="When present, No Transitions are included in the output. Useful for ancient samples with damaged DNA.")
 # group = parser.add_mutually_exclusive_group(required=False)
 # group.add_argument("-L", "--SampleList", type=argparse.FileType('r'), metavar="<INDIVIDUAL LIST FILE>", required=False, help="A list of column Names from the input FreqSum file to be excluded from the reference group. Ancient individuals should be excluded from the reference group. Can be supplemented with -S.")
@@ -21,7 +21,7 @@ if args.Input == None:
     I = sys.stdin
 else:
     I = args.Input
-M=5
+M=args.MAF
 Transitions = {"A":"G", "G":"A","C":"T","T":"C"}
 Samples=[]
 Refs=[]
@@ -49,7 +49,7 @@ for line in args.Input:
                 Tests.append(i)
                 Names[i]=re.split('[(|)]',fields[i])[0]
                 Sizes[re.split('[(|)]',fields[i])[0]]=int(re.split('[(|)]',fields[i])[1])
-        Matrix=[[[0 for i in range(M)] for j in range(len(Names))] for k in range(len(Names))]
+        Matrix=[[[0 for i in range(M+1)] for j in range(len(Names))] for k in range(len(Names))]
     else:
         if args.NT == True:
             if fields[3]==Transitions[fields[2]]:
@@ -65,7 +65,6 @@ for line in args.Input:
         elif Sum<2:
             continue
         else:
-            print (line)
             for r in Refs:
                 c1=fields[r]
                 if c1==0:
@@ -79,11 +78,11 @@ for line in args.Input:
                     else:
                         Matrix [r-4][x-4][Sum]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[x]])
 
-for m in range(2,M):
-    print(m,*(Names[i] for i in Refs), sep="\t")
+for m in range(2,M+1):
+    print(m,*(Names[i] for i in Refs), sep="\t", file=args.Output)
     for i in Refs:
-        print (Names[i], *(Matrix[i-4][x-4][m] for x in Refs), sep="\t")
-    print ("")
+        print (Names[i], *(Matrix[i-4][x-4][m] for x in Refs), sep="\t", file=args.Output)
+    print ("", file=args.Output)
 
 
 
