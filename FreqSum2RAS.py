@@ -51,6 +51,8 @@ for line in args.Input:
                 Sizes[re.split('[(|)]',fields[i])[0]]=int(re.split('[(|)]',fields[i])[1])
         Matrix=[[[0 for i in range(M+1)] for j in range(len(Names))] for k in range(len(Names))]
     else:
+        if fields[2]=="N":
+            continue
         if args.NT == True:
             if fields[3]==Transitions[fields[2]]:
                 continue
