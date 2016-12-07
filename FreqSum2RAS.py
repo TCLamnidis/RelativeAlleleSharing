@@ -11,9 +11,8 @@ parser.add_argument("-M", "--MAF", metavar="<MAX ALLELE COUNT>", type=int, defau
 # parser.add_argument("-MN", "--NormMax", metavar="<NUMBER>", type=int, help="The maximum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 10%% in the reference populations.", required=True)
 parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.", required=True)
 parser.add_argument("-NT", action='store_true', help="When present, No Transitions are included in the output. Useful for ancient samples with damaged DNA.")
-# group = parser.add_mutually_exclusive_group(required=False)
-# group.add_argument("-L", "--SampleList", type=argparse.FileType('r'), metavar="<INDIVIDUAL LIST FILE>", required=False, help="A list of column Names from the input FreqSum file to be excluded from the reference group. Ancient individuals should be excluded from the reference group. Can be supplemented with -S.")
-# group.add_argument("-S", "--Sample", action="append", metavar="<INDIVIDUAL>", required=False, help="Same as -L, except for flagging columns individually from the command line. Can be called multiple times. Can be called alongside -L to flag additional columns to those in the list.")
+parser.add_argument("-P","--Private", action='store_true', required=False, help="Restrict the RAS calculation to privately shared rare variants only.")
+parser.add_argument("-S", "--Sample", type=str, metavar="<POPULATION>", required=True, help="Set the Test population/individual. RAS will be calculated between the Test and all populations in the FreqSum.")
 args = parser.parse_args()
 
 #If no input file given, read from stdin
@@ -21,6 +20,7 @@ if args.Input == None:
     I = sys.stdin
 else:
     I = args.Input
+
 M=args.MAF
 Transitions = {"A":"G", "G":"A","C":"T","T":"C"}
 Samples=[]
@@ -28,38 +28,42 @@ Refs=[]
 Tests=[]
 Sizes={}
 Names={}
-# if args.SampleList != None:
-#     for line in args.SampleList:
-#         Samples.append(line.strip())
-#
-# if args.Sample!=None:
-#     for i in args.Sample:
-#         Samples.append(i)
+
+#Read -S argumant into sample list
+if args.Sample!=None:
+    for i in args.Sample:
+        Samples.append(i)
 
 for line in args.Input:
     fields=line.strip().split()
+    #Use FreqSum header to extract Test and Reference Pops
     if fields[0][0]=="#":
         PopNames=fields
         for i in range(4,len(fields)):
-            if re.split('[(|)]',fields[i])[0] not in Samples:
-                Refs.append(i)
-                Names[i]=re.split('[(|)]',fields[i])[0]
-                Sizes[re.split('[(|)]',fields[i])[0]]=int(re.split('[(|)]',fields[i])[1])
-            else:
-                Tests.append(i)
-                Names[i]=re.split('[(|)]',fields[i])[0]
-                Sizes[re.split('[(|)]',fields[i])[0]]=int(re.split('[(|)]',fields[i])[1])
-        Matrix=[[[0 for i in range(M+1)] for j in range(len(Names))] for k in range(len(Names))]
+            if re.split('[(|)]',fields[i])[0] in Samples:
+                Test=int(i)
+            Refs.append(i)
+            Names[i]=re.split('[(|)]',fields[i])[0]
+            Sizes[re.split('[(|)]',fields[i])[0]]=int(re.split('[(|)]',fields[i])[1])
+        #Define RAS Matrix
+        Matrix=[[0 for i in range(M+1)] for j in range(len(Names))]
     else:
+        #Ignore sites where hg19 has Ns
         if fields[2]=="N":
             continue
+        #Exclude Transitions
         if args.NT == True:
             if fields[3]==Transitions[fields[2]]:
                 continue
+        #Convert Freqsum input from string to integers
         for i in range(4,len(fields)):
             fields[i]=int(fields[i])
             if fields[i]<0:
                 fields[i]=0
+        #Only analyse lines where the Test population has variants
+        if fields[Test]==0:
+            continue
+        #Calculate variant counts in all populations and exclude if above MaxAf or 1
         Sum=0
         Sum=sum(fields[4:])
         if Sum>M:
@@ -67,23 +71,26 @@ for line in args.Input:
         elif Sum<2:
             continue
         else:
+            #Calcualte RAS for each population compared to the test
+            c2 = fields[Test]
             for r in Refs:
                 c1=fields[r]
+                #Exclude non private variants if private flag is given
+                if args.Private:
+                    if Sum!=c1+c2:
+                        continue
                 if c1==0:
                     continue
-                for x in Refs:
-                    c2 = fields[x]
-                    if c2==0:
-                        continue
-                    elif r==x:
-                        Matrix[r-4][x-4][Sum]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[x]]-1))
-                    else:
-                        Matrix [r-4][x-4][Sum]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[x]])
+                elif r==Test:
+                    Matrix[r-4][Sum]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
+                else:
+                    Matrix [r-4][Sum]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
 
+#Print output tables
 for m in range(2,M+1):
-    print(m,*(Names[i] for i in Refs), sep="\t", file=args.Output)
+    print(m,Names[Test], sep="\t", file=args.Output)
     for i in Refs:
-        print (Names[i], *(Matrix[i-4][x-4][m] for x in Refs), sep="\t", file=args.Output)
+        print (Names[i], Matrix[i-4][m], sep="\t", file=args.Output)
     print ("", file=args.Output)
 
 
