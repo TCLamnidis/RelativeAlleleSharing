@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys, argparse, re
-from time import strftime
 
 
 parser = argparse.ArgumentParser(description="Extract the frequency of shared rare variants between each test sample/group and all reference samples/groups from a freqsum file.")
@@ -31,8 +30,7 @@ Names={}
 
 #Read -S argumant into sample list
 if args.Sample!=None:
-    for i in args.Sample:
-        Samples.append(i)
+    Samples.append(args.Sample)
 
 for line in args.Input:
     fields=line.strip().split()
