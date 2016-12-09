@@ -44,7 +44,7 @@ for line in args.Input:
             Names[i]=re.split('[(|)]',fields[i])[0]
             Sizes[re.split('[(|)]',fields[i])[0]]=int(re.split('[(|)]',fields[i])[1])
         #Define RAS Matrix
-        Matrix=[[0 for i in range(M+1)] for j in range(len(Names))]
+        JackknifeMatrix=[[[0 for i in range(22)] for j in range(M+1)] for j in range(len(Names))]
     else:
         #Ignore sites where hg19 has Ns
         if fields[2]=="N":
@@ -54,6 +54,7 @@ for line in args.Input:
             if fields[3]==Transitions[fields[2]]:
                 continue
         #Convert Freqsum input from string to integers
+        fields[0]=int(fields[0])
         for i in range(4,len(fields)):
             fields[i]=int(fields[i])
             if fields[i]<0:
@@ -69,6 +70,7 @@ for line in args.Input:
         elif Sum<2:
             continue
         else:
+            Chr=fields[0]
             #Calcualte RAS for each population compared to the test
             c2 = fields[Test]
             for r in Refs:
@@ -80,15 +82,15 @@ for line in args.Input:
                 if c1==0:
                     continue
                 elif r==Test:
-                    Matrix[r-4][Sum]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
+                    JackknifeMatrix[r-4][Sum][Chr]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
                 else:
-                    Matrix [r-4][Sum]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
+                    JackknifeMatrix [r-4][Sum][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
 
 #Print output tables
 for m in range(2,M+1):
     print(m,Names[Test], sep="\t", file=args.Output)
     for i in Refs:
-        print (Names[i], Matrix[i-4][m], sep="\t", file=args.Output)
+        print (Names[i], sum(JackknifeMatrix[i-4][m]), sep="\t", file=args.Output)
     print ("", file=args.Output)
 
 
