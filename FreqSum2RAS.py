@@ -2,7 +2,7 @@
 
 import sys, argparse, re
 from math import sqrt
-
+from time import strftime
 
 parser = argparse.ArgumentParser(description="Extract the frequency of shared rare variants between each test sample/group and all reference samples/groups from a freqsum file.")
 parser.add_argument("-I", "--Input", metavar="<INPUT FILE>", type=argparse.FileType('r'), help="The input freqsum file.", required=False)
@@ -16,6 +16,7 @@ parser.add_argument("-P","--Private", action='store_true', required=False, help=
 parser.add_argument("-S", "--Sample", type=str, metavar="<POPULATION>", required=True, help="Set the Test population/individual. RAS will be calculated between the Test and all populations in the FreqSum.")
 args = parser.parse_args()
 
+print ("Program began running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
 #If no input file given, read from stdin
 if args.Input == None:
     I = sys.stdin
@@ -145,6 +146,7 @@ for m in range(2,M+1):
         print (Names[i], sum(JackknifeMatrix[i-4][m]), sqrt(Sigma2[i][m]), sep="\t", file=args.Output)
     print ("", file=args.Output)
 
+print ("Program finished running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
 
 
 
