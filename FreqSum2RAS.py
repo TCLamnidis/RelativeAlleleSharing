@@ -30,7 +30,20 @@ Refs=[]
 Tests=[]
 Sizes={}
 Names={}
-NumGroups=22
+NumBins=22
+
+
+def read_Freqsum_Header():
+    global Test
+    global PopNames
+    Pops=fields[4:]
+    PopNames=Pops
+    for i in range(len(Pops)):
+        if re.split('[(|)]',Pops[i])[0] in Samples:
+            Test=int(i)
+        Refs.append(i)
+        Names[i]=re.split('[(|)]',Pops[i])[0]
+        Sizes[re.split('[(|)]',Pops[i])[0]]=int(re.split('[(|)]',Pops[i])[1])
 
 #Read -S argumant into sample list
 if args.Sample!=None:
@@ -38,19 +51,16 @@ if args.Sample!=None:
 
 for line in args.Input:
     fields=line.strip().split()
+    Position=fields[1]
     #Use FreqSum header to extract Test and Reference Pops
     if fields[0][0]=="#":
-        PopNames=fields
-        for i in range(4,len(fields)):
-            if re.split('[(|)]',fields[i])[0] in Samples:
-                Test=int(i)
-            Refs.append(i)
-            Names[i]=re.split('[(|)]',fields[i])[0]
-            Sizes[re.split('[(|)]',fields[i])[0]]=int(re.split('[(|)]',fields[i])[1])
+        read_Freqsum_Header()
+        
         #Define RAS Matrix
-        JackknifeMatrix=[[[0 for i in range(NumGroups)] for j in range(M+1)] for k in range(len(Names))]
-        ras=[[[0 for i in range(NumGroups)] for j in range(M+1)] for k in range(len(Names))]
-        mj=[[[0 for i in range(NumGroups)] for j in range(M+1)] for k in range(len(Names))]
+        RAS=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
+        ras=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
+        mj=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
+        
     else:
         #Ignore sites where hg19 has Ns
         if fields[2]=="N":
@@ -60,27 +70,26 @@ for line in args.Input:
             if fields[3]==Transitions[fields[2]]:
                 continue
         #Convert Freqsum input from string to integers
-        fields[0]=int(fields[0])
-        for i in range(4,len(fields)):
-            fields[i]=int(fields[i])
-            if fields[i]<0:
-                fields[i]=0
+        if fields[0][0:3]=="chr":
+            Chr=int(fields[0][3:])-1
+        else:
+            Chr=int(fields[0])-1
+        Data = [0 if f=="-1" else int(f) for f in fields[4:]]
         #Only analyse lines where the Test population has variants
-        if fields[Test]==0:
+        if Data[Test]==0:
             continue
         #Calculate variant counts in all populations and exclude if above MaxAf or 1
         Sum=0
-        Sum=sum(fields[4:])
+        Sum=sum(Data)
         if Sum>M:
             continue
         elif Sum<2:
             continue
         else:
-            Chr=fields[0]
             #Calcualte RAS for each population compared to the test
-            c2 = fields[Test]
+            c2 = Data[Test]
             for r in Refs:
-                c1=fields[r]
+                c1=Data[r]
                 #Exclude non private variants if private flag is given
                 if args.Private:
                     if Sum!=c1+c2:
@@ -88,14 +97,14 @@ for line in args.Input:
                 if c1==0:
                     continue
                 elif r==Test:
-                    JackknifeMatrix[r-4][Sum][Chr-1]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
-                    mj[r-4][Sum][Chr-1]+=1
+                    RAS[r][Sum][Chr]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
+                    mj[r][Sum][Chr]+=1
                 else:
-                    JackknifeMatrix [r-4][Sum][Chr-1]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
-                    mj[r-4][Sum][Chr-1]+=1
+                    RAS [r][Sum][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
+                    mj[r][Sum][Chr]+=1
 
 #Reading chr lengths from bed file
-lengths=[0 for x in range(NumGroups)]
+lengths=[0 for x in range(NumBins)]
 for line in args.BedFile:
     fields = line.strip().split()
     Chr=int(fields[0])-1
@@ -105,45 +114,45 @@ for line in args.BedFile:
 
 
 #Calculation of ras, RAS per Mb
-for j in range(NumGroups):
+for j in range(NumBins):
     for k in range(M+1):
         for l in range(len(Names)):
-            ras[l][k][j]=(JackknifeMatrix[l][k][j]/lengths[j])
+            ras[l][k][j]=(RAS[l][k][j]/lengths[j])
 
 #Jackknife stimation
 Thetahat = [[0 for j in range(M+1)] for k in range(len(Names))]
-Thetaminus=[[[0 for c in range(NumGroups)] for j in range(M+1)] for k in range(len(Names))]
+Thetaminus=[[[0 for c in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
 for i in range(2,M+1):
     for j in range(len(Names)):
-        Thetahat[j][i]=(sum(JackknifeMatrix[j][i])/sum(lengths))
-        for c in range(NumGroups):
-            Thetaminus[j][i][c]=(sum(ras[j][i])-ras[j][i][c])
+        Thetahat[j][i]=(sum(RAS[j][i])/sum(lengths))
+        for c in range(NumBins):
+            Thetaminus[j][i][c]=(sum(RAS[j][i]) - RAS[j][i][c]) / (sum(lengths) - lengths[c])
 
 ThetaJ=[[0 for j in range(M+1)] for k in range(len(Names))]
 for i in range(2,M+1):
     for j in range(len(Names)):
         Sum1=0
         Sum2=0
-        for c in range(NumGroups):
+        for c in range(NumBins):
             Sum1+=Thetahat[j][i]-Thetaminus[j][i][c]
-            Sum2+=((mj[j][i][c] * Thetaminus[j][i][c])/sum(mj[j][i]))
+            Sum2+=((lengths[c] * Thetaminus[j][i][c])/sum(lengths))
         ThetaJ[j][i]=Sum1+Sum2
 
 Sigma2=[[0 for j in range(M+1)] for k in range(len(Names))]
 for i in range(2,M+1):
     for j in range(len(Names)):
-        for c in range(NumGroups):
-            hj=sum(mj[j][i])/mj[j][i][c]
+        for c in range(NumBins):
+            hj=sum(lengths)/lengths[c]
             pseudovalue=(hj*Thetahat[j][i])-((hj-1) * Thetaminus[j][i][c])
-            Sigma2[j][i]+=(((pseudovalue-ThetaJ[j][i])**2)/(hj-1))/NumGroups
+            Sigma2[j][i]+=(((pseudovalue-ThetaJ[j][i])**2)/(hj-1))/NumBins
 
 #Print output tables
-print (*PopNames, file=args.Output, sep="\t", end="\n")
+print ("#FREQSUM POPS & SIZES:",*PopNames, file=args.Output, sep=" ", end="\n")
 print ("#SAMPLE POPULATION: ", args.Sample, file=args.Output, end="\n\n")
 for m in range(2,M+1):
     print(m,"RAS","Jackknife Error", sep="\t", file=args.Output)
     for i in Refs:
-        print (Names[i], sum(JackknifeMatrix[i-4][m]), sqrt(Sigma2[i][m]), sep="\t", file=args.Output)
+        print (Names[i], sum(RAS[i-4][m]),Thetahat[i-4][m], ThetaJ[i-4][m], sqrt(Sigma2[i-4][m]), sep="\t", file=args.Output)
     print ("", file=args.Output)
 
 print ("Program finished running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
