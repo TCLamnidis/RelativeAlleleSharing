@@ -150,7 +150,7 @@ for i in range(2,M+1):
 print ("#FREQSUM POPS & SIZES:",*PopNames, file=args.Output, sep=" ", end="\n")
 print ("#SAMPLE POPULATION: ", args.Sample, file=args.Output, end="\n\n")
 for m in range(2,M+1):
-    print(m,"RAS","Jackknife Error", sep="\t", file=args.Output)
+    print(m,"RAS","θ-hat", "Jackknife Error", sep="\t", file=args.Output)
     for i in Refs:
         print (Names[i], sum(RAS[i-4][m]),Thetahat[i-4][m], ThetaJ[i-4][m], sqrt(Sigma2[i-4][m]), sep="\t", file=args.Output)
     print ("", file=args.Output)
