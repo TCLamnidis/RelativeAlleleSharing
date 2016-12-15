@@ -152,7 +152,7 @@ print ("#SAMPLE POPULATION: ", Names[Test], file=args.Output, end="\n\n")
 for i in Refs:
     print("RefPop","TestPop","RAS","θ-hat","θ_J" "Jackknife Error", "Allele Frequency", sep="\t", file=args.Output)
     for m in range(2,M+1):
-        print (Names[i], Names[Test] sum(RAS[i][m]),Thetahat[i][m], ThetaJ[i][m], sqrt(Sigma2[i][m]),m, sep="\t", file=args.Output)
+        print (Names[i], Names[Test], sum(RAS[i][m]),Thetahat[i][m], ThetaJ[i][m], sqrt(Sigma2[i][m]),m, sep="\t", file=args.Output)
     print ("", file=args.Output)
 
 print ("Program finished running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
