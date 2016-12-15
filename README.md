@@ -21,7 +21,7 @@ At the moment, each chromosome has to be filtered separately, before merging all
 * The minimum non-reference allele frequency is always 2, but the maximum allele frequency can be changed with the `-M` option (default is 10).
 * The script reads the FreqSum header to catalogue the populations in the FreqSum file. The sample, for which all the RAS will be calculated can be given with `-S` or `--Sample`. Only one population can be given as the Sample population, and the name given should match the name in the FreqSum header.
 * With the `-P` flag it is possible to only output private shared variants between the Sample population/individual and another population. 
-  * _(It should be noted that at the moment variants found twice in the Sample population and multiple times in a Reference population will be counted as private but will also be added to the self-sharing RAS of the Sample population. When looking at individuals as Sample population this should not be a problem as there shouldn't be any rare variants that are homozygous.)_
+  * _(It should be noted that at the moment variants found multiple times in the Sample population and multiple times in a Reference population will be counted as private but will also be added to the self-sharing RAS of the Sample population. Hence when finding variants in Allele Frequencies above the number of chromosomes in your Populations, this is the cause. When looking at individuals as Sample population this should not be happening as there shouldn't be any rare variants that are homozygous.)_
 * Finally, the `-NT` flag will exclude variants that are transitions from the RAS calculation. 
 * The above information can also be found in the command line with the option `-h`.
 ```
