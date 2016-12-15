@@ -22,7 +22,7 @@ At the moment, each chromosome has to be filtered separately, before merging all
   * _(It should be noted that at the moment variants found twice in the Sample population and multiple times in a Reference population will be counted as private but will also be added to the self-sharing RAS of the Sample population. When looking at individuals as Sample population this should not be a problem as there shouldn't be any rare variants that are homozygous.)_
 * Finally, the `-NT` flag will exclude variants that are transitions from the RAS calculation. 
 * The above information can also be found in the command line with the option `-h`.
-
+```
     $FreqSum2RAS.py -h 
     usage: FreqSum2RAS.py [-h] [-I <INPUT FILE>] [-M <MAX ALLELE COUNT>] -O
                       <OUTPUT FILE> -B <BED FILE> [-NT] [-P] -S <POPULATION>
@@ -51,7 +51,7 @@ At the moment, each chromosome has to be filtered separately, before merging all
                         Set the Test population/individual. RAS will be
                         calculated between the Test and all populations in the
                         FreqSum.
-
+```
 # RAS Output Format
 
 The first two lines of a RAS output start with a `#` and contain the populations and sizes of the populations in the input FreqSum, and the Sample Population given for that run. 
