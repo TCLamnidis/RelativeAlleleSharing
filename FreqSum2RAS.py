@@ -10,12 +10,18 @@ parser.add_argument("-M", "--MAF", metavar="<MAX ALLELE COUNT>", type=int, defau
 parser.add_argument("-m", "--mAF", metavar="<MIN ALLELE COUNT>", type=int, default=2, help="The minimum number of alleles (total) in the reference populations. The default minimum allele count is 2.", required=False)
 # parser.add_argument("-mN", "--NormMin", metavar="<NUMBER>", type=int, help="The minimum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 1%% in the reference populations.", required=True)
 # parser.add_argument("-MN", "--NormMax", metavar="<NUMBER>", type=int, help="The maximum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 10%% in the reference populations.", required=True)
+group = parser.add_mutually_exclusive_group(required=True)
 parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.", required=True)
-parser.add_argument("-B", "--BedFile", metavar="<BED FILE>", type=argparse.FileType('r'), help="The bed file with the calling mask for the FreqSum.THE FREQSUM SHOULD BE FILTERED THROUGH THE MASK BEFORE INPUT.", required=True)
+group.add_argument("-C", "--ChromFile", metavar="<FILE>", type=argparse.FileType('r'), help="A file that includes the lengths for each chromosome. The format of this file is Chromosome number    Length. Cannot be given with -B.", required=False)
+group.add_argument("-B", "--BedFile", metavar="<BED FILE>", type=argparse.FileType('r'), help="The bed file with the calling mask for the FreqSum.THE FREQSUM SHOULD BE FILTERED THROUGH THE MASK BEFORE INPUT. Cannot be given with -C.", required=False)
 parser.add_argument("-NT", action='store_true', help="When present, No Transitions are included in the output. Useful for ancient samples with damaged DNA.")
 parser.add_argument("-P","--Private", action='store_true', required=False, help="Restrict the RAS calculation to privately shared rare variants only.")
 parser.add_argument("-S", "--Sample", type=str, metavar="<POPULATION>", required=True, help="Set the Test population/individual. RAS will be calculated between the Test and all populations in the FreqSum.")
 args = parser.parse_args()
+
+if args.ChromFile is True and args.Bedfile is True:
+	parser.error("--BedFile and --ChromFile are mutually exclusive.")
+
 
 print ("Program began running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
 #If no input file given, read from stdin
@@ -33,7 +39,6 @@ Tests=[]
 Sizes={}
 Names={}
 NumBins=22
-
 
 def read_Freqsum_Header():
     global Test
@@ -60,7 +65,6 @@ for line in args.Input:
         
         #Define RAS Matrix
         RAS=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
-        ras=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
         mj=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
         
     else:
@@ -106,20 +110,21 @@ for line in args.Input:
                     mj[r][Sum][Chr]+=1
 
 #Reading chr lengths from bed file
-lengths=[0 for x in range(NumBins)]
-for line in args.BedFile:
-    fields = line.strip().split()
-    Chr=int(fields[0])-1
-    start = int(fields[1])
-    end = int(fields [2])
-    lengths [Chr]+= (end - start)/1000000
+if args.BedFile:
+    lengths=[0 for x in range(NumBins)]
+    for line in args.BedFile:
+        fields = line.strip().split()
+        Chr=int(fields[0])-1
+        start = int(fields[1])
+        end = int(fields [2])
+        lengths [Chr]+= (end - start)/1000000
 
-
-#Calculation of ras, RAS per Mb
-for j in range(NumBins):
-    for k in range(mAF,M+1):
-        for l in range(len(Names)):
-            ras[l][k][j]=(RAS[l][k][j]/lengths[j])
+elif args.ChromFile:
+    lengths=[0 for x in range(NumBins)]
+    for line in args.ChromFile:
+        fields = line.strip().split()
+        Chr=int(fields[0])-1
+        lengths[Chr]=int(fields[1])/1000000
 
 #Jackknife stimation
 Thetahat = [[0 for j in range(M+1)] for k in range(len(Names))]
@@ -158,10 +163,4 @@ for i in Refs:
     print ("", file=args.Output)
 
 print ("Program finished running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
-
-
-
-
-
-
 
