@@ -26,9 +26,9 @@ if args.ChromFile is True and args.Bedfile is True:
 print ("Program began running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
 #If no input file given, read from stdin
 if args.Input == None:
-    I = sys.stdin
+    Input = sys.stdin
 else:
-    I = args.Input
+    Input = args.Input
 
 mAF=args.mAF
 M=args.MAF
@@ -56,7 +56,7 @@ def read_Freqsum_Header():
 if args.Sample!=None:
     Samples.append(args.Sample)
 
-for line in args.Input:
+for line in Input:
     fields=line.strip().split()
     Position=fields[1]
     #Use FreqSum header to extract Test and Reference Pops
