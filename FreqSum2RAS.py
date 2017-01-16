@@ -22,6 +22,8 @@ args = parser.parse_args()
 if args.ChromFile is True and args.Bedfile is True:
 	parser.error("--BedFile and --ChromFile are mutually exclusive.")
 
+if args.mAF<1:
+    parser.error("--mAF cannot be lower than 1.")
 
 print ("Program began running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
 #If no input file given, read from stdin
@@ -105,9 +107,11 @@ for line in Input:
                 elif r==Test:
                     RAS[r][Sum][Chr]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
                     mj[r][Sum][Chr]+=1
+                    RAS[r][mAF-1][Chr]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
                 else:
                     RAS [r][Sum][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
                     mj[r][Sum][Chr]+=1
+                    RAS [r][mAF-1][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
 
 #Reading chr lengths from bed file
 if args.BedFile:
@@ -129,14 +133,14 @@ elif args.ChromFile:
 #Jackknife stimation
 Thetahat = [[0 for j in range(M+1)] for k in range(len(Names))]
 Thetaminus=[[[0 for c in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
-for i in range(mAF,M+1):
+for i in range(mAF-1,M+1):
     for j in range(len(Names)):
         Thetahat[j][i]=(sum(RAS[j][i])/sum(lengths))
         for c in range(NumBins):
             Thetaminus[j][i][c]=(sum(RAS[j][i]) - RAS[j][i][c]) / (sum(lengths) - lengths[c])
 
 ThetaJ=[[0 for j in range(M+1)] for k in range(len(Names))]
-for i in range(mAF,M+1):
+for i in range(mAF-1,M+1):
     for j in range(len(Names)):
         Sum1=0
         Sum2=0
@@ -146,7 +150,7 @@ for i in range(mAF,M+1):
         ThetaJ[j][i]=Sum1+Sum2
 
 Sigma2=[[0 for j in range(M+1)] for k in range(len(Names))]
-for i in range(mAF,M+1):
+for i in range(mAF-1,M+1):
     for j in range(len(Names)):
         for c in range(NumBins):
             hj=sum(lengths)/lengths[c]
@@ -160,6 +164,8 @@ print("RefPop","TestPop","RAS","RAS/Mb","Jackknife Estimator", "Jackknife Error 
 for i in Refs:
     for m in range(mAF,M+1):
         print (Names[i], Names[Test], "{:.5}".format(float(sum(RAS[i][m]))), "{:.15e}".format(Thetahat[i][m]), "{:.15e}".format(ThetaJ[i][m]), "{:.15e}".format(sqrt(Sigma2[i][m])),m, sep="\t", file=args.Output)
+    m=mAF-1
+    print (Names[i], Names[Test], "{:.5}".format(float(sum(RAS[i][m]))), "{:.15e}".format(Thetahat[i][m]), "{:.15e}".format(ThetaJ[i][m]), "{:.15e}".format(sqrt(Sigma2[i][m])),"Total [{},{}]".format(mAF,M), sep="\t", file=args.Output)
     print ("", file=args.Output)
 
 print ("Program finished running at:", strftime("%D %H:%M:%S"), file=sys.stderr)

@@ -80,7 +80,7 @@ The first two lines of a RAS output start with a `#` and contain the populations
 
 This information is followed by the result tables.
 The first line of the result table contains the labels for each result column. 
-After this line the script will output a table for each population, containing the above information per allele frequency (2-10 by default).
+After this line the script will output a table for each population, containing the above information per allele frequency (2-10 by default) as well as one line for the sum across all allele frequencies.
 
     RefPop	TestPop			RAS	    RAS/Mb	              Jackknife Estimator     Jackknife Error   Allele Frequency
     PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	2
@@ -92,6 +92,7 @@ After this line the script will output a table for each population, containing t
     PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	8
     PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	9
     PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	10
+	PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	Total [2,10]
     
     PopB    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	2
     PopB    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	3
