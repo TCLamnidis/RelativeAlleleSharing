@@ -82,19 +82,22 @@ This information is followed by the result tables.
 The first line of the result table contains the labels for each result column. 
 After this line the script will output a table for each population, containing the above information per allele frequency (2-10 by default).
 
-    RefPop    TestPop    RAS    θ-hat    θ_J    Jackknife Error    Allele Frequency 
-    PopA    Individual1 	0	  0.0	 0.0	0.0  2
-    PopA    Individual1 	0	  0.0	 0.0	0.0  3
-    PopA    Individual1 	0	  0.0	 0.0	0.0  4
-    PopA    Individual1 	0	  0.0	 0.0	0.0  5
-    PopA    Individual1 	0	  0.0	 0.0	0.0  6
-    PopA    Individual1 	0	  0.0	 0.0	0.0  7
-    PopA    Individual1 	0	  0.0	 0.0	0.0  8
-    PopA    Individual1 	0	  0.0	 0.0	0.0  9
-    PopA    Individual1 	0	  0.0	 0.0	0.0  10
+    RefPop	TestPop			RAS	    RAS/Mb	              Jackknife Estimator     Jackknife Error   Allele Frequency
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	2
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	3
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	4
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	5
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	6
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	7
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	8
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	9
+    PopA    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	10
     
-    PopB    Individual1 	0	  0.0	 0.0	0.0  2
-    PopB    Individual1 	0	  0.0	 0.0	0.0  3
+    PopB    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	2
+    PopB    Individual1 	0	0.000000000000000e+00	0.000000000000000e+00	0.000000000000000e+00	3
                         ...
+
+The Reference Population is given in the first column, followed by the Sample population in the second. The Sample population will be constant across the whole output file. The third output column shows the RAS statistic as defined in (paper in prep). The fourth output column gives a measure of RAS/Mb, based on the Bed file/Chromosome file provided, and is followed by the Jackknife Estimator of RAS/Mb and the Jackknife Error. The final column shows the frequency of non-reference variants and is between -m (default=2) and -M (default=10). 
+_The above output has been formatted slightly to align column labels with the columns._
 
 _Please note that we are still exploring the optimal way to present the output for plotting, and the above format might change in future renditions of the script._

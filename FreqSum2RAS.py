@@ -156,10 +156,10 @@ for i in range(mAF,M+1):
 #Print output tables
 print ("#FREQSUM POPS & SIZES:",*PopNames, file=args.Output, sep=" ", end="\n")
 print ("#SAMPLE POPULATION: ", Names[Test], file=args.Output, end="\n\n")
-print("RefPop","TestPop","RAS","θ-hat","θ_J " "Jackknife Error", "Allele Frequency", sep="\t", file=args.Output)
+print("RefPop","TestPop","RAS","RAS/Mb","Jackknife Estimator", "Jackknife Error ", "Allele Frequency", sep="\t", file=args.Output)
 for i in Refs:
     for m in range(mAF,M+1):
-        print (Names[i], Names[Test], sum(RAS[i][m]),Thetahat[i][m], ThetaJ[i][m], sqrt(Sigma2[i][m]),m, sep="\t", file=args.Output)
+        print (Names[i], Names[Test], "{:.5}".format(float(sum(RAS[i][m]))), "{:.15e}".format(Thetahat[i][m]), "{:.15e}".format(ThetaJ[i][m]), "{:.15e}".format(sqrt(Sigma2[i][m])),m, sep="\t", file=args.Output)
     print ("", file=args.Output)
 
 print ("Program finished running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
