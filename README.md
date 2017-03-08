@@ -4,9 +4,9 @@ A script to calculate Relative Allele Sharing (RAS) between a Sample population 
 `Freqsum2RAS.py` requires a FreqSum file containing all the Populations for use in the analysis as an input file. The FreqSum format and various tools for working with this format are documented in https://github.com/stschiff/rarecoal-tools.
 
 # Filtering the FreqSum file
-The input FrqSum file should first be filtered through the 35mer Unimask (made by Heng Li), which can be found here: https://sourceforge.net/projects/lh3/files/unimask/. This filtering needs to be done for each chromosome separately (if using the script provided here), and for that a separate mask for each chromosome will be needed. Such a mask can be easily acquired with:
+The input FrqSum file should first be filtered through the Mappability, which can be found here: (link to be added here). This filtering needs to be done for each chromosome separately (if using the script provided here), and for that a separate mask for each chromosome will be needed. Such a mask can be easily acquired with:
 
-    for i in {1..22}; do awk -v X=$i '$1==X' /path/to/Unimask > /path/to/out.chr$i.bed ; done
+    for i in {1..22}; do awk -v X=$i '$1==X' /path/to/mask > /path/to/out.chr$i.bed ; done
 
 The resulting `.bed` files can then be used for filtering of each FreqSum. The awk script `filterThroughMask.awk` included in this package, and can be used to filter a FreqSum file using a `.bed` file. 
    
