@@ -11,7 +11,7 @@ parser.add_argument("-m", "--mAF", metavar="<MIN ALLELE COUNT>", type=int, defau
 # parser.add_argument("-mN", "--NormMin", metavar="<NUMBER>", type=int, help="The minimum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 1%% in the reference populations.", required=True)
 # parser.add_argument("-MN", "--NormMax", metavar="<NUMBER>", type=int, help="The maximum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 10%% in the reference populations.", required=True)
 group = parser.add_mutually_exclusive_group(required=True)
-parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.", required=True)
+parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.")
 group.add_argument("-C", "--ChromFile", metavar="<FILE>", type=argparse.FileType('r'), help="A file that includes the lengths for each chromosome. The format of this file is Chromosome number    Length. Mutually exclusive with -B.", required=False)
 group.add_argument("-B", "--BedFile", metavar="<BED FILE>", type=argparse.FileType('r'), help="The bed file with the calling mask for the FreqSum.THE FREQSUM SHOULD BE FILTERED THROUGH THE MASK BEFORE INPUT. Mutually exclusive with -C.", required=False)
 parser.add_argument("-NT", action='store_true', help="When present, No Transitions are included in the output. Useful for ancient samples with damaged DNA.")
@@ -31,6 +31,9 @@ if args.Input == None:
     Input = sys.stdin
 else:
     Input = args.Input
+
+if args.Output == None:
+    args.Output = sys.stdout
 
 mAF=args.mAF
 M=args.MAF
