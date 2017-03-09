@@ -11,7 +11,7 @@ parser.add_argument("-m", "--mAF", metavar="<MIN ALLELE COUNT>", type=int, defau
 # parser.add_argument("-mN", "--NormMin", metavar="<NUMBER>", type=int, help="The minimum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 1%% in the reference populations.", required=True)
 # parser.add_argument("-MN", "--NormMax", metavar="<NUMBER>", type=int, help="The maximum number of alleles to be taken into account for the normalization factor Zα. Should be equivalent to allele frequency of about 10%% in the reference populations.", required=True)
 group = parser.add_mutually_exclusive_group(required=True)
-parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.", required=True)
+parser.add_argument("-O", "--Output", metavar="<OUTPUT FILE>", type=argparse.FileType('w'), help="The output file.")
 group.add_argument("-C", "--ChromFile", metavar="<FILE>", type=argparse.FileType('r'), help="A file that includes the lengths for each chromosome. The format of this file is Chromosome number    Length. Mutually exclusive with -B.", required=False)
 group.add_argument("-B", "--BedFile", metavar="<BED FILE>", type=argparse.FileType('r'), help="The bed file with the calling mask for the FreqSum.THE FREQSUM SHOULD BE FILTERED THROUGH THE MASK BEFORE INPUT. Mutually exclusive with -C.", required=False)
 parser.add_argument("-NT", action='store_true', help="When present, No Transitions are included in the output. Useful for ancient samples with damaged DNA.")
@@ -32,6 +32,9 @@ if args.Input == None:
 else:
     Input = args.Input
 
+if args.Output == None:
+    args.Output = sys.stdout
+
 mAF=args.mAF
 M=args.MAF
 Transitions = {"A":"G", "G":"A","C":"T","T":"C"}
@@ -40,7 +43,48 @@ Refs=[]
 Tests=[]
 Sizes={}
 Names={}
-NumBins=22
+
+def convert_lengths_dict_to_lengths_list(lengths_dict):
+    nrChroms = len(lengths_dict)
+    lengths = []
+    for chrom in range(nrChroms):
+        if chrom not in lengths_dict:
+            print("Error: could not find length information for chromosome",
+                chrom, file=sys.stderr)
+            sys.exit()
+        else:
+            lengths.append(lengths_dict[chrom])
+    return lengths
+
+def read_chrom_file(filename):
+    lengths_dict = {}
+    for line in filename:
+        fields = line.strip().split()
+        Chr=int(fields[0])-1
+        lengths_dict[Chr]=int(fields[1])/1000000
+    return convert_lengths_dict_to_lengths_list(lengths_dict)
+
+def read_bed_file(filename):
+    lengths_dict = {}
+    for line in filename:
+        fields = line.strip().split()
+        Chr=int(fields[0])-1
+        start = int(fields[1])
+        end = int(fields [2])
+        if Chr not in lengths_dict:
+            lengths_dict[Chr] = 0
+        lengths_dict[Chr] += (end - start)/1000000
+    return convert_lengths_dict_to_lengths_list(lengths_dict)
+
+lengths = []
+if args.ChromFile:
+    lengths = read_chrom_file(args.ChromFile)
+else:
+    lengths = read_bed_file(args.BedFile)
+
+NumBins=len(lengths)
+
+print("found", NumBins, "chromosomes in bed/chrom file", file=sys.stderr)
 
 def read_Freqsum_Header():
     global Test
@@ -58,17 +102,18 @@ def read_Freqsum_Header():
 if args.Sample!=None:
     Samples.append(args.Sample)
 
+lastChrom = -1
 for line in Input:
     fields=line.strip().split()
     Position=fields[1]
     #Use FreqSum header to extract Test and Reference Pops
     if fields[0][0]=="#":
         read_Freqsum_Header()
-        
+
         #Define RAS Matrix
         RAS=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
         mj=[[[0 for i in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
-        
+
     else:
         #Ignore sites where hg19 has Ns
         if fields[2]=="N":
@@ -82,6 +127,10 @@ for line in Input:
             Chr=int(fields[0][3:])-1
         else:
             Chr=int(fields[0])-1
+        if Chr != lastChrom:
+            print("processing chromosome", Chr, file=sys.stderr)
+        lastChrom = Chr
+
         Data = [0 if f=="-1" else int(f) for f in fields[4:]]
         #Only analyse lines where the Test population has variants
         if Data[Test]==0:
@@ -112,23 +161,6 @@ for line in Input:
                     RAS [r][Sum][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
                     mj[r][Sum][Chr]+=1
                     RAS [r][mAF-1][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
-
-#Reading chr lengths from bed file
-if args.BedFile:
-    lengths=[0 for x in range(NumBins)]
-    for line in args.BedFile:
-        fields = line.strip().split()
-        Chr=int(fields[0])-1
-        start = int(fields[1])
-        end = int(fields [2])
-        lengths [Chr]+= (end - start)/1000000
-
-elif args.ChromFile:
-    lengths=[0 for x in range(NumBins)]
-    for line in args.ChromFile:
-        fields = line.strip().split()
-        Chr=int(fields[0])-1
-        lengths[Chr]=int(fields[1])/1000000
 
 #Jackknife stimation
 Thetahat = [[0 for j in range(M+1)] for k in range(len(Names))]
@@ -169,4 +201,3 @@ for i in Refs:
     print ("", file=args.Output)
 
 print ("Program finished running at:", strftime("%D %H:%M:%S"), file=sys.stderr)
-
