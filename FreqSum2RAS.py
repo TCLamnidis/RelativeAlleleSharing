@@ -17,6 +17,7 @@ group.add_argument("-B", "--BedFile", metavar="<BED FILE>", type=argparse.FileTy
 parser.add_argument("-NT", action='store_true', help="When present, No Transitions are included in the output. Useful for ancient samples with damaged DNA.")
 parser.add_argument("-P","--Private", action='store_true', required=False, help="Restrict the RAS calculation to privately shared rare variants only.")
 parser.add_argument("-S", "--Sample", type=str, metavar="<POPULATION>", required=True, help="Set the Test population/individual. RAS will be calculated between the Test and all populations in the FreqSum.")
+parser.add_argument("--restrictAF", type=str, metavar="POP1,POP2,...", required=False, help="Give a list of comma-separated population names that should be considered when computing the allele frequency")
 args = parser.parse_args()
 
 if args.ChromFile is True and args.Bedfile is True:
@@ -44,7 +45,10 @@ Tests=[]
 Sizes={}
 Names={}
 
+restrictPops = args.restrictAF.split(",") if args.restrictAF != None else []
+    
 def convert_lengths_dict_to_lengths_list(lengths_dict):
+    print(lengths_dict)
     nrChroms = len(lengths_dict)
     lengths = []
     for chrom in range(nrChroms):
@@ -137,7 +141,12 @@ for line in Input:
             continue
         #Calculate variant counts in all populations and exclude if above MaxAf or 1
         Sum=0
-        Sum=sum(Data)
+        if restrictPops == []:
+            Sum=sum(Data)
+        else:
+            for i in range(len(Names)):
+                if Names[i] in restrictPops:
+                    Sum += Data[i] 
         if Sum>M:
             continue
         elif Sum<2:
