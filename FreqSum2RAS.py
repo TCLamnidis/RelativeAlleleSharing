@@ -102,7 +102,7 @@ def read_Freqsum_Header():
         Names[i]=re.split('[(|)]',Pops[i])[0]
         Sizes[re.split('[(|)]',Pops[i])[0]]=int(re.split('[(|)]',Pops[i])[1])
 
-#Read -S argumant into sample list
+#Read -S argument into sample list
 if args.Sample!=None:
     Samples.append(args.Sample)
 
@@ -200,7 +200,11 @@ for i in range(mAF-1,M+1):
 
 #Print output tables
 print ("#FREQSUM POPS & SIZES:",*PopNames, file=args.Output, sep=" ", end="\n")
-print ("#SAMPLE POPULATION: ", Names[Test], file=args.Output, end="\n\n")
+print ("#SAMPLE POPULATION: ", Names[Test], file=args.Output, end="\n")
+if restrictPops == []:
+    print ("#POPULATIONS CONSIDERED FOR ALLELE FREQUENCY CALCULATIONS:", "ALL", file=args.Output, sep="\t", end="\n\n")
+else:
+    print ("#POPULATIONS CONSIDERED FOR ALLELE FREQUENCY CALCULATIONS:", *restrictPops, file=args.Output, sep="\t", end="\n\n")
 print("RefPop","TestPop","RAS","RAS/Mb","Jackknife Estimator", "Jackknife Error ", "Allele Frequency", sep="\t", file=args.Output)
 for i in Refs:
     for m in range(mAF,M+1):
