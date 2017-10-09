@@ -28,6 +28,7 @@ At the moment, each chromosome has to be filtered separately, before merging all
 * The output file is defined using the `-O` option.
 * The maximum allele frequency for the non-Reference allele in can be changed with the `-M` option (default is 10).
 * By default, the minimum allele frequency of the non-reference allele is 2, but it can be changed with option `-m` to analyse other slices of RAS.
+* By default, all populations are used to compute allele counts. When using the `--restrictAF` option, you can give a set of comma-separated population names to restrict computing the allele count to those populations.
 * The script reads the FreqSum header to catalogue the populations in the FreqSum file. The sample, for which all the RAS will be calculated can be given with `-S` or `--Sample`. Only one population can be given as the Sample population, and the name given should match the name in the FreqSum header.
 * With the `-P` flag it is possible to only output private shared variants between the Sample population/individual and another population. 
   * _(It should be noted that at the moment variants found multiple times in the Sample population and multiple times in a Reference population will be counted as private but will also be added to the self-sharing RAS of the Sample population. Hence when finding variants in Allele Frequencies above the number of chromosomes in your Populations, this is the cause. When looking at individuals as Sample population this should not be happening as there shouldn't be any rare variants that are homozygous.)_
@@ -36,40 +37,46 @@ At the moment, each chromosome has to be filtered separately, before merging all
 ```
     $FreqSum2RAS.py -h 
 usage: FreqSum2RAS.py [-h] [-I <INPUT FILE>] [-M <MAX ALLELE COUNT>]
-                      [-m <MIN ALLELE COUNT>] -O <OUTPUT FILE>
+                      [-m <MIN ALLELE COUNT>] [-O <OUTPUT FILE>]
                       (-C <FILE> | -B <BED FILE>) [-NT] [-P] -S <POPULATION>
+                      [--restrictAF POP1,POP2,...]
 
 Extract the frequency of shared rare variants between each test sample/group
 and all reference samples/groups from a freqsum file.
 
 optional arguments:
-  -h, --help                show this help message and exit
+  -h, --help            show this help message and exit
   -I <INPUT FILE>, --Input <INPUT FILE>
-                            The input freqsum file. Omit to read stom stdin.
+                        The input freqsum file. Omit to read stom stdin.
   -M <MAX ALLELE COUNT>, --MAF <MAX ALLELE COUNT>
-                            The maximum number of alleles (total) in the reference
-                            populations. The default maximum allele value is 10.
+                        The maximum number of alleles (total) in the reference
+                        populations. The default maximum allele value is 10.
   -m <MIN ALLELE COUNT>, --mAF <MIN ALLELE COUNT>
-                            The minimum number of alleles (total) in the reference
-                            populations. The default minimum allele count is 2.
+                        The minimum number of alleles (total) in the reference
+                        populations. The default minimum allele count is 2.
   -O <OUTPUT FILE>, --Output <OUTPUT FILE>
-                            The output file.
+                        The output file.
   -C <FILE>, --ChromFile <FILE>
-                            A file that includes the lengths for each chromosome.
-                            The format of this file is Chromosome number Length.
-                            Mutually exclusive with -B.
+                        A file that includes the lengths for each chromosome.
+                        The format of this file is Chromosome number Length.
+                        Mutually exclusive with -B.
   -B <BED FILE>, --BedFile <BED FILE>
-                            The bed file with the calling mask for the FreqSum.THE
-                            FREQSUM SHOULD BE FILTERED THROUGH THE MASK BEFORE
-                            INPUT. Mutually exclusive with -C.
-  -NT                       When present, No Transitions are included in the
-                            output. Useful for ancient samples with damaged DNA.
-  -P, --Private             Restrict the RAS calculation to privately shared rare
-                            variants only.
+                        The bed file with the calling mask for the FreqSum.THE
+                        FREQSUM SHOULD BE FILTERED THROUGH THE MASK BEFORE
+                        INPUT. Mutually exclusive with -C.
+  -NT                   When present, No Transitions are included in the
+                        output. Useful for ancient samples with damaged DNA.
+  -P, --Private         Restrict the RAS calculation to privately shared rare
+                        variants only.
   -S <POPULATION>, --Sample <POPULATION>
-                            Set the Test population/individual. RAS will be
-                            calculated between the Test and all populations in the
-                            FreqSum.
+                        Set the Test population/individual. RAS will be
+                        calculated between the Test and all populations in the
+                        FreqSum.
+  --restrictAF POP1,POP2,...
+                        Give a list of comma-separated population names that
+                        should be considered when computing the allele
+                        frequency
+
 ```
 # RAS Output Format
 
