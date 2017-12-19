@@ -135,7 +135,7 @@ for line in Input:
             print("processing chromosome", Chr, file=sys.stderr)
         lastChrom = Chr
 
-        Data = [0 if f=="-1" else int(f) for f in fields[4:]]
+        Data = [0 if f=="-1" else int(f) for f in fields[4:]] #Assume ref allele when missing data!
         #Only analyse lines where the Test population has variants
         if Data[Test]==0:
             continue
@@ -165,11 +165,11 @@ for line in Input:
                 elif r==Test:
                     RAS[r][Sum][Chr]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
                     mj[r][Sum][Chr]+=1
-                    RAS[r][mAF-1][Chr]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1))
+                    RAS[r][mAF-1][Chr]+=(c1*(c2-1)) / (Sizes[Names[r]] * (Sizes[Names[Test]]-1)) # "mAF-1" stores the sum of RAS across all chromosomes.
                 else:
                     RAS [r][Sum][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
                     mj[r][Sum][Chr]+=1
-                    RAS [r][mAF-1][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]])
+                    RAS [r][mAF-1][Chr]+=(c1*c2) / (Sizes[Names[r]] * Sizes[Names[Test]]) # "mAF-1" stores the sum of RAS across all chromosomes.
 
 #Jackknife stimation
 Thetahat = [[0 for j in range(M+1)] for k in range(len(Names))]
