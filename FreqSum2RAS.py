@@ -174,14 +174,14 @@ for line in Input:
 #Jackknife stimation
 Thetahat = [[0 for j in range(M+1)] for k in range(len(Names))]
 Thetaminus=[[[0 for c in range(NumBins)] for j in range(M+1)] for k in range(len(Names))]
-for i in range(mAF-1,M+1):
+for i in range(mAF-1,M+1): # M+1 to pick up all chromosomes (0-based to 1-based). mAF-1 to get the Thetas for the Sum of AFs too.
     for j in range(len(Names)):
         Thetahat[j][i]=(sum(RAS[j][i])/sum(lengths))
         for c in range(NumBins):
             Thetaminus[j][i][c]=(sum(RAS[j][i]) - RAS[j][i][c]) / (sum(lengths) - lengths[c])
 
 ThetaJ=[[0 for j in range(M+1)] for k in range(len(Names))]
-for i in range(mAF-1,M+1):
+for i in range(mAF-1,M+1): # M+1 to pick up all chromosomes (0-based to 1-based). mAF-1 to get the Thetas for the Sum of AFs too.
     for j in range(len(Names)):
         Sum1=0
         Sum2=0
@@ -191,7 +191,7 @@ for i in range(mAF-1,M+1):
         ThetaJ[j][i]=Sum1+Sum2
 
 Sigma2=[[0 for j in range(M+1)] for k in range(len(Names))]
-for i in range(mAF-1,M+1):
+for i in range(mAF-1,M+1): # M+1 to pick up all chromosomes (0-based to 1-based). mAF-1 to get the Thetas for the Sum of AFs too.
     for j in range(len(Names)):
         for c in range(NumBins):
             hj=sum(lengths)/lengths[c]
