@@ -1,3 +1,6 @@
+## This repository is deprecated and only available for backwards compatibility. Please refer to the new repository below.
+https://github.com/TCLamnidis/RAStools
+
 # RelativeAlleleSharing
 A script to calculate Relative Allele Sharing (RAS) between a Sample population and all other populations in a FreqSum file. The script also calculates RAS per Mb (θ-hat) and preforms weighted Jackknife to give a Jackknife estimate of θ-hat as well as a Jackknife Error estimate for an Error bar.
 
